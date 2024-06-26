@@ -78,7 +78,7 @@ RCT_EXPORT_METHOD(presentEventCreatingDialog:(NSDictionary *)options resolver:(R
     controller.event = [self createNewEventInstance];
     controller.eventStore = [self getEventStoreInstance];
     controller.editViewDelegate = self;
-    [self assignNavbarColorsTo:controller.navigationBar];
+    // [self assignNavbarColorsTo:controller.navigationBar];
     [self presentViewController:controller];
 }
 
@@ -192,27 +192,27 @@ RCT_EXPORT_METHOD(presentEventEditingDialog:(NSDictionary *)options resolver:(RC
 #pragma mark -
 #pragma mark EKEventEditViewDelegate
 
-- (void)eventEditViewController:(EKEventEditViewController *)controller
-          didCompleteWithAction:(EKEventEditViewAction)action
-{
+- (void)eventEditViewController:(EKEventEditViewController *)controller didCompleteWithAction:(EKEventEditViewAction)action {
     AddCalendarEvent * __weak weakSelf = self;
-    [self.viewController dismissViewControllerAnimated:YES completion:^
-     {
-         dispatch_async(dispatch_get_main_queue(), ^{
-             if (action == EKEventEditViewActionCanceled) {
-                 [weakSelf resolveWithAction:CANCELED];
-             } else if (action == EKEventEditViewActionSaved) {
-                 EKEvent *evt = controller.event;
-                 NSDictionary *params = @{
-                                          @"eventIdentifier":evt.eventIdentifier,
-                                          @"calendarItemIdentifier":evt.calendarItemIdentifier,
-                                          };
-                 [weakSelf resolveWithAction:SAVED andParams:params];
-             } else if (action == EKEventEditViewActionDeleted) {
-                 [weakSelf resolveWithAction:DELETED];
-             }
-         });
-     }];
+    [self.viewController dismissViewControllerAnimated:YES completion:^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (action == EKEventEditViewActionCanceled) {
+                [weakSelf resolveWithAction:CANCELED];
+            } else if (action == EKEventEditViewActionSaved) {
+                EKEvent *evt = controller.event;
+                NSMutableDictionary *params = [NSMutableDictionary dictionary];
+                if (evt.eventIdentifier) {
+                    params[@"eventIdentifier"] = evt.eventIdentifier;
+                }
+                if (evt.calendarItemIdentifier) {
+                    params[@"calendarItemIdentifier"] = evt.calendarItemIdentifier;
+                }
+                [weakSelf resolveWithAction:SAVED andParams:[params copy]];
+            } else if (action == EKEventEditViewActionDeleted) {
+                [weakSelf resolveWithAction:DELETED];
+            }
+        });
+    }];
 }
 
 
